@@ -1,0 +1,85 @@
+swagger: '2.0'
+info:
+  title: BirdStats API
+  version: '0.1'
+  description: Toy API for collecting stats about Oystercatchers
+tags:
+  - name: "statistics"
+    description: "Statistics for a given metric"
+
+produces:
+  - application/json
+schemes:
+  - "http"
+basePath: /api
+paths:
+  /totals:
+    get:
+      tags: 
+        - "statistics"
+      operationId: app.totals
+      summary: "Get the reported totals for the Australian Pied Oystercatcher"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Returns an object with plottable JSON"
+          schema: 
+            $ref: '#/definitions/TSVPlottable'
+        500:
+          description: "A problem occurred reading the TSV data"
+  /corestats:
+    get:
+      tags: 
+        - "statistics"
+      operationId: app.corestats
+      summary: "Get some statistics relating to Oystercatcher abundance"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Returns an object with the core statistics we report"
+          schema: 
+            $ref: '#/definitions/CoreStats'
+        500:
+          description: "A problem occurred reading the TSV data"
+definitions:
+  TSVPlottable:
+    type: object
+    required:
+      - labels
+      - series
+    properties:
+      labels:
+        type: array
+        description: "x-axis labels for the data series."
+        items:
+          type: string
+      series:
+        type: array
+        description: datapoints for this dataset
+        items:
+          # ideally these would be floats, but since we're dealing with JS, we can get away with string.
+          type: string
+  CoreStats:
+    type: object
+    required:
+      - annual_sightings
+      - max_sightings
+      - max_sighting_month
+      - mean_monthly_sightings
+    properties:
+      annual_sightings:
+        type: int
+        description: total sightings for this bird over the year.
+      max_sightings:
+        type: int
+        description: maximum sightings in any one month
+      max_sighting_month:
+        type: string
+        description: The name, English, of the month where the maximum sightings occurred.
+      mean_monthly_sightings:
+        type: float
+        description: The average number of sightings per month over the year.
+
+

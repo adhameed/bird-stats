@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- much of the styling in here is using bulma. It is so hassle free it is irresistible. -->
+    <link rel="stylesheet" type="text/css" href="assets/css/bulma/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/js/chartist/chartist.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/js/chartist/chartist-plugin-tooltip.css">
+
+    <script src="assets/js/chartist/chartist.min.js"></script>
+    <!-- add a few plugins since chartist is too slim for them. -->
+    <script src="assets/js/chartist/chartist-plugin-axistitle.min.js"></script>
+    <script src="assets/js/chartist/chartist-plugin-tooltip.min.js"></script>
+
+    <!-- HACK: rotate labels to make things easier to read. -->
+    <style>
+        svg.ct-chart-line {
+            overflow: visible;
+        }
+
+        .ct-label.ct-label.ct-horizontal.ct-end {
+            position: relative;
+            justify-content: flex-end;
+            text-align: right;
+            transform-origin: 100% 0;
+            transform: translate(-100%) rotate(-45deg);
+            white-space: nowrap;
+        }
+
+        /* chartist uses css for colours, requires careful use to change a series colour here */
+        #ct-chart2.ct-chart .ct-series-a .ct-line,
+        #ct-chart2.ct-chart .ct-series-a .ct-point {
+            stroke: blue;
+        }
+    </style>
+    <!-- HACK: I want to use Axios, and it doesn't work without promises. -->
+    <script src="assets/js/es6-promise/es6-promise.min.js"></script>
+    <script src="assets/js/es6-promise/es6-promise.auto.min.js"></script>
+    <script src="assets/js/axios/axios.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>Some Oystercatcher stats!</title>
+</head>
+<body>
+<div id="heroheader">
+    <section class="hero is-dark is-bold">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-vcentered">
+                    <div class="column is-half">
+                        <h1 class="title">
+                            Australian Pied Oystercatcher
+                        </h1>
+                        <h2 class="subtitle">
+                            <em>Haematopus longirostris</em>
+                        </h2>
+                    </div>
+                    <div class="column is-half">
+                        <figure>
+                            <img src="assets/pied_oc_on_beach.jpg" alt="Pied Oystercatcher on a beach">
+                            <figcaption>An adult walking along a coastline in Victoria – note the characteristic
+                                orange-red beak
+                            </figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<!-- body, we want a plot, some audio, some stats in a table. -->
+<section id="text_description">
+    <section class="section is-small">
+        The pied oystercatcher (<em>Haematopus longirostris</em>) is a species of oystercatcher. It is a wading bird
+        native to Australia and commonly found on its coastline. The similar South Island pied oystercatcher (<em>H.
+        finschi</em>) occurs in New Zealand.
+        (<a href="https://en.wikipedia.org/wiki/Pied_oystercatcher">Pied oystercatcher</a>, accessed 2019-03-26).
+    </section>
+    <section class="section is-small">
+        <span class="is-size-3">Oystercatcher Observations in Tasmania - eBird checklists for 1902 through 2019</span>
+    </section>
+</section>
+<div id="info_boxes">
+    <section class="section is-small">
+        <div class="columns">
+            <div class="column">
+                <div class="box">
+                    <div class="is-size-5" id="obs_header">
+                        Annual Observations
+                    </div>
+                    <div class="is-size-3" id="obs_val">
+                        Placeholder
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="box">
+                    <div class="is-size-5" id="sightings_hdr">Max Monthly Sightings</div>
+                    <div class="is-size-3" id="sightings_val">Placeholder</div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="box">
+                    <div class="is-size-5" id="avg_mthly_hdr">Mean Monthly Sightings</div>
+                    <div class="is-size-3" id="avg_mthly_val">Placeholder</div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="box">
+                    <div class="is-size-5" id="audio_hdr">
+                        Sample Call
+                    </div>
+                    <div class="is-size-4">
+                        <audio controls>
+                            <source src="assets/chatham-island-oystercatcher-song.mp3" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<div id="plots">
+    <section class="section">
+        <div class="columns">
+            <div class="column is-half">
+                <div class="is-size-3">Checklist Frequency</div>
+                <div class="ct-chart ct-perfect-fourth" id="ct-chart1">
+                </div>
+            </div>
+            <div class="column is-half">
+                <div class="is-size-3">Checklist Totals</div>
+                <div class="ct-chart ct-perfect-fourth" id="ct-chart2">
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<div id="references">
+    <section class="section is-small">
+        <span class="is-size-3">References</span>
+        <ul>
+            <li>‘Pied Oystercatcher’ (2019) Wikipedia. Available at <a href="https://en.wikipedia.org/wiki/Pied_oystercatcher">https://en.wikipedia.org/wiki/Pied_oystercatcher</a> (Accessed 2019-03-26).</li>
+            <li>'eBird'. 2012. eBird: An online database of bird distribution and abundance [web application]. eBird, Ithaca, New York. Available: <a href="http://www.ebird.org">http://www.ebird.org</a>. (Accessed: Date [e.g., February 2, 2012]).</li>
+        </ul>
+    </section>
+</div>
+
+<script lang="js">
+    // this prefix is the default flask debug server port.
+    API_PREFIX = 'http://localhost:5000';
+
+    function makeChart(data, selectorName, yAxisTitle) {
+        new Chartist.Line(selectorName, {
+            labels: data.labels,
+            series: [data.series]   // beware: expects an array of arrays.
+        }, {
+            fullWidth: true,
+            chartPadding: {
+                right: 40
+            },
+            plugins: [
+                Chartist.plugins.ctAxisTitle(
+                    {
+                        axisX: {
+                            axisTitle: 'Week Of Year',
+                            axisClass: 'ct-axis-title',
+                            offset: {
+                                x: 0,
+                                y: 50
+                            },
+                            textAnchor: 'middle'
+                        },
+                        axisY: {
+                            axisTitle: yAxisTitle,
+                            axisClass: 'ct-axis-title',
+                            offset: {
+                                x: 0,
+                                y: 0
+                            },
+                            textAnchor: 'middle',
+                            flipTitle: false
+                        }
+                    }
+                ),
+                Chartist.plugins.tooltip({anchorToPoint: true})
+            ]
+        });
+    }
+
+    function populateTextBubbles(data) {
+        try {
+            var annualObs = document.getElementById('obs_val');
+            annualObs.innerText = data.annual_sightings;
+            var maxMonthlySightings = document.getElementById('sightings_val');
+            maxMonthlySightings.innerText = data.max_sighting_month + ": " + data.max_sightings;
+            var meanMonthlySightings = document.getElementById('avg_mthly_val');
+            meanMonthlySightings.innerText = data.mean_monthly_sightings;
+        } catch (e) {
+            console.log('Aiie, could not update the text bubbles: ' + e);
+        }
+    }
+
+    // chart 1, checklist frequency.
+    axios.get(API_PREFIX + '/freq').then(function (response) {
+        console.log('Response from the freq API endpoint: ' + JSON.stringify(response));
+        // mutate the response. We want scaled % numbers rather than floating point 0-1 range.
+        response.data.series = response.data.series.map(function (x) {
+            return x * 100;
+        });
+        makeChart(response.data, '#ct-chart1', 'Frequency in eBird Checklists (%)')
+    }).catch(function (error) {
+        console.log('Aiie! Failed getting data from freq API endpoint @/freq:' + error);
+    });
+
+    // chart 2 - total observations in any time window.
+    axios.get(API_PREFIX + '/totals').then(function (response) {
+        console.log('Response from the totals API endpoint: ' + JSON.stringify(response));
+
+        makeChart(response.data, '#ct-chart2', 'Total Weekly Counts')
+    }).catch(function (error) {
+        console.log('Aiie! Failed getting data from totals API endpoint @/totals:' + error);
+    });
+
+    // core stats for text bubbles.
+    axios.get(API_PREFIX + '/corestats').then(function (response) {
+        console.log('Response from the corestats API endpoint: ' + JSON.stringify(response));
+
+        populateTextBubbles(response.data)
+    }).catch(function (error) {
+        console.log('Aiie! Failed getting data from corestats API endpoint @/totals:' + error);
+    });
+</script>
+</body>
+</html>
